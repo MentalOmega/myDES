@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+{% block title %}
+    des差分分析
+{% endblock %} 
+{% block script %}
+    <script>
+        $(document).ready(function () {
+            $("#DA").click(function () {
+                var input = document.getElementById("deltaB").value
+                if (input.match("[01]{6}")) {
+                    $.post("{{ url_for('task_one') }}",
+                        {
+                            deltaS: document.getElementById("deltaB").value
+                        },
+                        function (data, status) {
+                            obj = JSON.parse(data);
+                            $("#data").empty()
+                            for (i in obj) {
+                                var td = $("<td></td>").text(obj[i].deltaS)
+                                var tr = $("<tr></tr>")
+                                tr.append(td)
+                                td = $("<td></td>").text(obj[i].num)
+                                tr.append(td)
+                                td = $("<td></td>").text(obj[i].pair)
+                                tr.append(td)
+                                $("#data").append(tr)
+
+                            }
+                        });
+                    return false
+                }
+                return true
+            })
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="jumbotron">
+        <div class="container">
+            <h1>DES任务一</h1>
+            <div>
+                <a class="btn btn-success" href="{{ url_for("task_two_home") }}">
+                    学习更多
+                </a>
+            </div>
+            <p>给定某个Sbox的输入差分情况下，计算所有输入对和所有Sbox输出差分的分布情况</p>
+            <form class="form-inline">
+                <div class="form-group">
+                    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
+                    <div class="input-group">
+                        <div class="input-group-addon">ΔB-输入差分</div>
+                        <input type="text" class="form-control" id="deltaB" placeholder="输入6位二进制数" pattern="[01]{6}"
+                               title="请输入6位二进制数">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="DA" onclick="">输出差分分布以及所有可能输入</button>
+            </form>
+        </div>
+    </div>
+    <div class="container">
+        <table class="table table-hover" id="table">
+            <caption>数据分析表格</caption>
+            <thead>
+            <tr>
+                <th>S1的输入差分ΔS1</th>
+                <th>输入数量</th>
+                <th>可能的输入</th>
+            </tr>
+            </thead>
+            <tbody id="data">
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

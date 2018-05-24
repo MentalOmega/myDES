@@ -1,0 +1,140 @@
+{% extends 'layout.html' %}
+{% block title %}
+    任务2
+{% endblock %}
+{% block script %}
+    <script>
+        var pid = 0
+        $(document).ready(function () {
+            $("#DA").click(function () {
+                var DA = document.getElementById("DA")
+                DA.setAttribute("disabled", "disabled")
+                console.log(DA)
+                var seed = Math.random()
+                console.log(seed)
+                var sel = document.getElementById("bit");//select元素的id
+                var index = sel.selectedIndex;//获取被选中的option的索引
+                var bit = sel.options[index].text;//获取相应的option的内容
+                sel = document.getElementById("choose");
+                var index = sel.selectedIndex;
+                var choose = sel.options[index].value
+                var key = document.getElementById("key").value
+                var text = document.getElementById("text").value
+                if (key.match("^[0-9|a-z|A-Z]{8}$") && text.match("^[0-9|a-z|A-Z]{8}$")) {
+                    $("#bar").attr("class", "progress-bar progress-bar-striped active")
+                    $("#bar").width(0)
+                    var sitv = setInterval(function () {
+                        $.ajax({
+                            url: "{{ url_for("task_two_check")}}",
+                            data: {seed: seed},
+                            type: 'POST',
+                            async: true,
+                            success: function (percent) {
+                                var bar = document.getElementById("bar")
+                                bar.style = "width: " + percent + "%"
+                                $("#bar").width(percent + '%');
+                                console.log(percent)
+                            }
+                        })
+
+                    }, 1000)
+                    $.ajax({
+                        url: "{{ url_for('task_two') }}",
+                        type: 'POST',
+                        async: true,
+                        data: {
+                            key: key,
+                            text: text,
+                            bit: bit,
+                            choose: choose,
+                            seed: seed
+                        },
+                        success: function (data, status) {
+                            clearInterval(sitv)
+                            $("#bar").width(100 + "%")
+                            $('#bar').attr("class", "progress progress-bar-success");
+                            var img = document.createElement("img")
+                            img.src = data
+                            img.className = "img-thumbnail"
+                            img.id = pid
+                            document.getElementById("pic").insertBefore(img, document.getElementById(pid - 1))
+                            pid++
+                            DA.removeAttribute("disabled")
+                        }
+                    })
+
+                    return false
+                    //如果js提交了就不要html的form表单在提交一次了
+                }
+                DA.removeAttribute("disabled")
+                return true
+                //如果js没提交成功就让form表单提交，但事实上，过不了input标签的匹配，是为了让input标签来拦截非法输入
+            })
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="jumbotron">
+        <div class="container">
+            <h1>DES的任务</h1>
+            <p>2. 统计DES算法在密钥固定情况，输入明文改变1位、2位，。。。64位时。输出密文位数改变情况。</p>
+            <p>3. 统计DES算法在明文固定情况，密钥🔑改变1位、2位，。。。64位时。输出密文位数改变情况。</p>
+            <form class="form-inline">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            输入你喜欢的DES密钥
+                        </div>
+                        <input type="text" class="form-control" id="key" placeholder="输入8位英文或数字字符"
+                               pattern="^[0-9|a-z|A-Z]{8}$"
+                               title="请输入8位英文或数字字符">
+                    </div>
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            输入加密的要明文
+                        </div>
+                        <input type="text" class="form-control" id="text" placeholder="输入8位英文或数字字符"
+                               pattern="^[0-9|a-z|A-Z]{8}$"
+                               title="请输入8位英文或数字字符">
+                    </div>
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            输入要测试的改变位数
+                        </div>
+                        <select class="form-control" id="bit">
+                            {% for i in range(0,65) %}
+                                <option>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="container">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                请选择执行的任务类型
+                            </div>
+                            <select class="form-control" id="choose">
+                                <option value="1">任务2</option>
+                                <option value="2">任务3</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="DA" onclick="false">输出密文位数改变情况。</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <div class="container" id="pic">
+        <div class="row">
+            <h3>运行进度：</h3>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped active" role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100" style="width: 10%" id="bar">
+                    <span class="sr-only">45% Complete</span>
+                </div>
+            </div>
+        </div>
+        <h3>数据统计结果:在随机取数据1000组的统计情况下</h3>
+
+    </div>
+{% endblock %}
